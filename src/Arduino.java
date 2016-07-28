@@ -10,6 +10,7 @@ public class Arduino {
 	private SerialPort serialPort; // the serial port communicator to the arduino
 	boolean busy; // whether the arm is running or not
 	private Queue<String> queue; // the queue for multiple commands, will finish execution before starting next function
+	boolean initializing = true;
 
 	// constructor for an Arduino object, takes one parameter of the serial port ID
 	public Arduino(String portID) {
@@ -21,6 +22,7 @@ public class Arduino {
 			serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, 
 					SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);// Set params. Also you can set params by the string:
 																		//serialPort.setParams(9600, 8, 1, 0);
+			serialPort.addEventListener(new SerialPortReader());
 		} catch (SerialPortException ex) {
 			System.out.println(ex);
 		}
@@ -30,6 +32,11 @@ public class Arduino {
 	void write(String string) throws SerialPortException {
 		busy = true;
 		serialPort.writeString(string);
+	}
+	
+	public void absmove(float x, float y, float z) throws SerialPortException {
+		String string = x + "," + y + "," + z + ",abs";
+		addQueue(string);
 	}
 
 	// moves the arm to (x,y,z)
@@ -55,18 +62,18 @@ public class Arduino {
 	}
 
 	// adds a command to the queue, private
-	private void addQueue(String string) throws SerialPortException {
-		/*if (busy)
+	void addQueue(String string) throws SerialPortException {
+		if (busy && !initializing)
 			queue.add(string);
-		else*/
+		else
 			write(string);
 	}
 
 	// runs the next item in the queue, private
 	private void runQueue() throws SerialPortException {
-		if (queue.peek() != null)
+		if (queue.peek() != null){
 			write(queue.remove());
-		else
+		}else
 			busy = false;
 	}
 
@@ -74,12 +81,14 @@ public class Arduino {
 	class SerialPortReader implements SerialPortEventListener {
 		public void serialEvent(SerialPortEvent event) {
 			if (event.isRXCHAR()) {// If data is available
-				if (event.getEventValue() == 5) {
-					try {
+				try {
+					if (serialPort.readString(event.getEventValue()).equals("\n")) {
+						initializing = false;
 						runQueue();
-					} catch (SerialPortException e) {
-						e.printStackTrace();
+						System.out.println("done");
 					}
+				} catch (SerialPortException e) {
+					e.printStackTrace();
 				}
 			} else if (event.isCTS()) {// If CTS line has changed state
 				if (event.getEventValue() == 1) {// If line is ON

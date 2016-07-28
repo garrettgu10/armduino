@@ -3,18 +3,18 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Scanner;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 
 import jssc.SerialPortException;
 
 class GPanel extends JPanel{
 	private static final long serialVersionUID = 5992612117451928397L;
 	Color bgcolor = new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));
-
+	
 	public void paint(Graphics g){
+		//JPanel paint function
 		Graphics2D g2 = (Graphics2D)g;
 		g2.setColor(bgcolor);
 		g2.fillRect(0, 0, this.getWidth(), this.getHeight());
@@ -22,7 +22,7 @@ class GPanel extends JPanel{
 		g2.drawString("U R NOW CONTROLLING 3D STAGE",10,100);
 	}
 	
-	public void changeColor(){
+	public void changeColor(){ //changes background color
 		bgcolor = new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));
 	}
 }
@@ -30,39 +30,57 @@ class GPanel extends JPanel{
 public class armduino {
 	
 	static Arduino a;
-	static JFrame frame;
-	static GPanel panel = new GPanel();
+	static JFrame keyFrame;
+	static GPanel keyPanel;
 	
 	public static void send(KeyEvent e) throws SerialPortException{
 		boolean changeColor = true;
 		switch(e.getKeyCode()){
-		case KeyEvent.VK_UP: a.move(0, 1, 0);break;
-		case KeyEvent.VK_DOWN: a.move(0, -1, 0);break;
-		case KeyEvent.VK_LEFT: a.move(-1, 0, 0);break;
-		case KeyEvent.VK_RIGHT: a.move(1, 0, 0);break;
-		case KeyEvent.VK_ENTER: a.move(0, 0, 5); break;
-		case KeyEvent.VK_BACK_SPACE: a.move(0, 0, -5);break;
+		case KeyEvent.VK_UP: a.move(0, 0.5f, 0);break;
+		case KeyEvent.VK_DOWN: a.move(0, -0.5f, 0);break;
+		case KeyEvent.VK_LEFT: a.move(-0.5f, 0, 0);break;
+		case KeyEvent.VK_RIGHT: a.move(0.5f, 0, 0);break;
+		case KeyEvent.VK_ENTER: a.move(0, 0, 0.5f); break;
+		case KeyEvent.VK_BACK_SPACE: a.move(0, 0, -0.5f);break;
 		case KeyEvent.VK_G: a.move(5, 5, 5); break;
 		case KeyEvent.VK_C: a.calibrate(); break;
+		case KeyEvent.VK_V: a.addQueue("vacon"); 
+		break;
 		default: changeColor = false;
 		}
 		if(changeColor){
-			panel.changeColor();
-			frame.repaint();
+			keyPanel.changeColor();
+			keyFrame.repaint();
 		}
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		a = new Arduino("/dev/cu.usbmodem1421");
+		a = new Arduino("/dev/cu.usbmodem1421"); //Change this string when changing Arduinos
 		
-		frame = new JFrame("Window");
-		frame.setContentPane(panel);
-		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		frame.setSize(500, 200);
-		frame.setVisible(true);
-		frame.addKeyListener(new myListener());
+		keyPanel = new GPanel();
 		
+		keyFrame = new JFrame("Window");
+		keyFrame.setContentPane(keyPanel);
+		keyFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		keyFrame.setSize(500,200);
+		keyFrame.setVisible(true);
+		keyFrame.addKeyListener(new myListener());
+		
+		
+		while(true){
+			Scanner s = new Scanner(System.in);
+			System.out.print("Enter x coord: ");
+			float x = s.nextFloat();
+			System.out.print("Enter y coord: ");
+			float y = s.nextFloat();
+			System.out.print("Enter z coord: ");
+			float z = s.nextFloat();
+			try {
+				a.absmove(x, y, z);
+			} catch (SerialPortException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
 

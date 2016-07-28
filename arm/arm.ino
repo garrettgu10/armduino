@@ -48,10 +48,19 @@ int byteRead = 0;
 char lineRead[LINE_SIZE];
 
 //Location of head
-int posX = 0, posY = 0, posZ = 0;
-int tempX = 0, tempY = 0, tempZ = 0;
+float tempX = 0, tempY = 0, tempZ = 0;
+
+bool calibrated = false;
 
 int stopped = false;
+
+struct COORD{
+  float x;
+  float y;
+  float z;
+}currentPos;
+
+const COORD maxCoord = {114,101,101};
 
 void setup()
 {
@@ -88,6 +97,7 @@ void setup()
   pinMode(Z_BOTTOM_SENSOR, INPUT);
 
   pinMode(13,OUTPUT);
+  calibrate();
   
   //Internal pullup resistor will invert signal
   pinMode(STOP_PIN, INPUT_PULLUP);
@@ -101,13 +111,13 @@ void loop()
       delay(100);
       //Puts data in buffer lineRead
       readSerial();
-      if(strcmp(lineRead,"vacon")==0)
+      if(strcmp(lineRead,"vacon")==0){
         vacuumOn();
-      else if(strcmp(lineRead,"vacoff")==0)
+      }else if(strcmp(lineRead,"vacoff")==0){
         vacuumOff();
-      else if(strcmp(lineRead,"cal")==0)
+      }else if(strcmp(lineRead,"cal")==0){
         calibrate();
-      else{
+      }else{
         char *token, *string;
     
         string = lineRead;
@@ -118,29 +128,37 @@ void loop()
         tempZ = 0;
         //pickup or dropoff
         char *type;
+        char *modifier;
         
         //The following code is a particularly bad way of processing a string
         while ((token = strsep(&string, ",")) != NULL)
         {
-          if(iteration==X)
+          if(iteration==X){
             tempX = atof(token);
-          else if(iteration==Y)
+          }else if(iteration==Y){
             tempY = atof(token);
-          else if(iteration==2)
+          }else if(iteration==2){
             type = token;
+          }else if(iteration==3){
+            modifier = token;
+          }
           iteration++;
         }
-        if (strcmp(type,"pickup")==0)
+        /*if (strcmp(type,"pickup")==0){
             pickup(tempX, tempY);
-          else if (strcmp(type,"dropoff")==0)
+        }else if (strcmp(type,"dropoff")==0){
             dropoff(tempX, tempY);
-          else{
+        }else{*/
             tempZ = atof(type);
-            movePos(tempX,tempY,tempZ);
-          }
+            if(strcmp(modifier,"abs")==0){
+              absMove(tempX,tempY,tempZ);
+            }else{
+              movePos(tempX,tempY,tempZ);
+            }
+        //}
       }
       if(!stopped)
-        Serial.println();  //indicates that command has finished executing
+        Serial.print("\n");  //indicates that command has finished executing
     }
   }
 }
@@ -152,10 +170,11 @@ void moveDistance(float distance, int axis){
 
 void rotate(float angle, int axis, int dir){
   if(axis==Y){
-    if(dir == COUNTERCLOCKWISE)
+    if(dir == COUNTERCLOCKWISE){
       digitalWrite(DIR_Y_PIN, HIGH);
-    else
+    }else{
       digitalWrite(DIR_Y_PIN, LOW);
+    }
     for(int i=0;i<PULSES_PER_CIRCLE*angle;i++){
       if(isStopped()){
         stopped = true;
@@ -169,10 +188,11 @@ void rotate(float angle, int axis, int dir){
   //In practice the code for moving X and Y is located in the moveXY function
   //The code immediately below should never get called
   else if(axis==X){
-    if(dir == COUNTERCLOCKWISE)
+    if(dir == COUNTERCLOCKWISE){
       digitalWrite(DIR_X_PIN, HIGH);
-    else
+    }else{
       digitalWrite(DIR_X_PIN, LOW);
+    }
     for(int i=0;i<PULSES_PER_CIRCLE*angle;i++){
       if(isStopped()){
         stopped = true;
@@ -185,10 +205,11 @@ void rotate(float angle, int axis, int dir){
   }
   else if(axis==Z){
     //intentional
-    if(dir == CLOCKWISE)
+    if(dir == CLOCKWISE){
       digitalWrite(DIR_Z_PIN, HIGH);
-    else
+    }else{
       digitalWrite(DIR_Z_PIN, LOW);
+    }
     for(int i=0;i<PULSES_PER_CIRCLE*angle;i++){
       if(isStopped()){
         stopped = true;
@@ -209,40 +230,18 @@ void readSerial(){
     /*terminates read on 64 characters, end of data, or newline
     **Newline should be used to terminate input
     */
-    if((byteRead = Serial.read()) != '\n')
+    if((byteRead = Serial.read()) != '\n'){
       lineRead[i] = byteRead;
-    else
+    }else{
       break;
+    }
   }
-}
-
-char *relativeMove(float x, float y, float z){
-  //If Z is negative move last
-  //If Z is positive move first
-  if(z>0)
-    moveDistance(z, Z);
-//  moveDistance(x, X);
-//  moveDistance(y, Y);
-    movePos(x,y);
-  if(z<0)
-    moveDistance(z, Z);
-    
-  //Update stored postitions
-  posX += x;
-  posY += y;
-  posZ += z;
-  char location[64];
-  snprintf(location, 64, "%f %f %f", posX, posY, posZ);
-  return (location);
-}
-
-char *absoluteMove(float x, float y, float z){
-  return(relativeMove(x-posX,y-posY,z-posZ)); 
 }
 
 void vacuumOn()
 {
   digitalWrite(VACUUM_PIN, LOW);  
+  digitalWrite(13, HIGH);
 }
 
 void vacuumOff()
@@ -250,7 +249,7 @@ void vacuumOff()
   digitalWrite(VACUUM_PIN, HIGH);
 }
 
-char *pickup(float x, float y){
+/*char *pickup(float x, float y){
   relativeMove(0,0,UPDOWN);
   absoluteMove(x,y, posZ);
   relativeMove(0,0,-UPDOWN);
@@ -264,7 +263,7 @@ char *dropoff(float x, float y){
   relativeMove(0,0,-UPDOWN);
   vacuumOff();
   return "done";
-}
+}*/
 //time in ms
 void disableMotors(int time){
   digitalWrite(EN_X_PIN,HIGH);
@@ -304,6 +303,7 @@ bool isColliding(bool dir, int axis){
       return true;
     }
     if(dir==COUNTERCLOCKWISE && digitalRead(X_LEFT_SENSOR)==SENSOR_TRIPPED){
+      currentPos.x=0;
       return true;
     }
   }else if(axis==Y){
@@ -311,10 +311,12 @@ bool isColliding(bool dir, int axis){
       return true;
     }
     if(dir==COUNTERCLOCKWISE && digitalRead(Y_FRONT_SENSOR)==SENSOR_TRIPPED){
+      currentPos.y=0;
       return true;
     }
   }else if(axis==Z){
     if(dir==CLOCKWISE && digitalRead(Z_BOTTOM_SENSOR)==SENSOR_TRIPPED){
+      currentPos.z=0;
       return true;
     }
   }
@@ -324,6 +326,7 @@ bool isColliding(bool dir, int axis){
 void calibrate(){ 
   //this function is basically a clone of the movePos function,
   //but with each axis moving all the way in the negative direction.
+  //look there if more documentation is needed.
   //trust me: replacing the following with movePos(INT_MIN,INT_MIN,INT_MIN) does not work.
   bool moveX = true;
   bool moveY = true;
@@ -335,7 +338,7 @@ void calibrate(){
   digitalWrite(DIR_Y_PIN, LOW);
   digitalWrite(DIR_Z_PIN, HIGH);
   
-  while(moveX || moveY || moveZ){
+  while((moveX || moveY) || moveZ){
      if(isStopped()){
         stopped = true;
         break;
@@ -349,6 +352,7 @@ void calibrate(){
       }
       if(isColliding(xDir,X)){
         moveX = false;
+        digitalWrite(13,HIGH);
       }
       if(moveX){
         digitalWrite(CP_X_PIN, HIGH);
@@ -363,13 +367,41 @@ void calibrate(){
         digitalWrite(CP_Z_PIN, LOW);
       }
   }
+  currentPos.x=0;
+  currentPos.y=0;
+  currentPos.z=0;
+  calibrated = true;
+  digitalWrite(13,HIGH);
+}
+
+void absMove(float x, float y, float z){
+  if(!calibrated){
+    calibrate();
+  }
+  movePos(x-currentPos.x,y-currentPos.y,z-currentPos.z);
 }
 
 void movePos(float x, float y, float z){
+  if(calibrated){
+    if(currentPos.x+x>maxCoord.x){
+      return;
+    }
+    if(currentPos.y+y>maxCoord.y){
+      return;
+    }
+    if(currentPos.z+z>maxCoord.z){
+      return;
+    }
+    currentPos.x+=x;
+    currentPos.y+=y;
+    currentPos.z+=z;
+  }
+  
   int xTicks = abs(x*PULSES_PER_CIRCLE/DISTANCE_PER_TURN); //ticks are the number of pulses sent out to the motor drivers
   int yTicks = abs(y*PULSES_PER_CIRCLE/DISTANCE_PER_TURN);
   int zTicks = abs(z*PULSES_PER_CIRCLE/DISTANCE_PER_TURN)*2;
   int maxTicks = (xTicks>yTicks? (xTicks>zTicks? xTicks: zTicks): (yTicks>zTicks? yTicks:zTicks)); //nested ternary statements are not bad form, ok?
+  
   bool xDir = (x<0)?COUNTERCLOCKWISE:CLOCKWISE; //counterclockwise is left
   //negative is left
   bool yDir = (y<0)?COUNTERCLOCKWISE:CLOCKWISE; //counterclockwise is backwards
@@ -378,18 +410,21 @@ void movePos(float x, float y, float z){
   //negative is down
 
   //setting motor direction
-  if(xDir == CLOCKWISE)
+  if(xDir == CLOCKWISE){
       digitalWrite(DIR_X_PIN, HIGH);
-  else
+  }else{
       digitalWrite(DIR_X_PIN, LOW);
-  if(yDir == CLOCKWISE)
+  }
+  if(yDir == CLOCKWISE){
       digitalWrite(DIR_Y_PIN, HIGH);
-  else
+  }else{
       digitalWrite(DIR_Y_PIN, LOW);
-  if(zDir == CLOCKWISE)
+  }
+  if(zDir == CLOCKWISE){
       digitalWrite(DIR_Z_PIN, HIGH);
-  else
+  }else{
       digitalWrite(DIR_Z_PIN, LOW);
+  }
 
   //You don't need to understand this, but basically,
   //what's happening is the arduino is sending out a pulse signal
@@ -401,14 +436,17 @@ void movePos(float x, float y, float z){
         break;
       }
       delayMicroseconds(DELAY);
-      if(isColliding(zDir,Z)){
+      if(isColliding(zDir,Z) && zTicks!=0){
         zTicks = 0;
+        int maxTicks = (xTicks>yTicks? (xTicks>zTicks? xTicks: zTicks): (yTicks>zTicks? yTicks:zTicks)); //nested ternary statements are not bad form, ok?
       }
-      if(isColliding(yDir,Y)){
+      if(isColliding(yDir,Y) && yTicks!=0){
         yTicks = 0;
+        int maxTicks = (xTicks>yTicks? (xTicks>zTicks? xTicks: zTicks): (yTicks>zTicks? yTicks:zTicks)); //nested ternary statements are not bad form, ok?
       }
-      if(isColliding(xDir,X)){
+      if(isColliding(xDir,X) && xTicks!=0){
         xTicks = 0;
+        int maxTicks = (xTicks>yTicks? (xTicks>zTicks? xTicks: zTicks): (yTicks>zTicks? yTicks:zTicks)); //nested ternary statements are not bad form, ok?
       }
       if(i<xTicks){
         digitalWrite(CP_X_PIN, HIGH);
