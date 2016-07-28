@@ -12,6 +12,7 @@
 #define DIR_Z_PIN 10
 #define EN_Z_PIN 9
 
+//below are the metal sensors that are plugged into the analog ports
 #define X_LEFT_SENSOR A4
 #define X_RIGHT_SENSOR A0
 #define Y_FRONT_SENSOR A3
@@ -287,7 +288,17 @@ void movePos(float x, float y){
 }
 
 bool isColliding(bool dir, int axis){
-  // pretty bad code, improve if you want
+  //variables:
+  //dir -- either CLOCKWISE or COUNTERCLOCKWISE
+  //axis -- X, Y, or Z
+  
+  //pretty bad code, improve if you want
+  //basically, what this does is check to see if the 
+  //sensor that's in the direction of motion
+  //is detecting the presence of the platform.
+  //if this function returns true, it means the
+  //platform cannot move more or else it'll collide
+  //with the boundaries.
   if(axis==X){
     if(dir==CLOCKWISE && digitalRead(X_RIGHT_SENSOR)==SENSOR_TRIPPED){
       return true;
@@ -310,19 +321,63 @@ bool isColliding(bool dir, int axis){
   return false;
 }
 
-void calibrate(){
+void calibrate(){ 
+  //this function is basically a clone of the movePos function,
+  //but with each axis moving all the way in the negative direction.
+  //trust me: replacing the following with movePos(INT_MIN,INT_MIN,INT_MIN) does not work.
+  bool moveX = true;
+  bool moveY = true;
+  bool moveZ = true;
+  bool xDir = COUNTERCLOCKWISE;
+  bool yDir = COUNTERCLOCKWISE;
+  bool zDir = CLOCKWISE;
+  digitalWrite(DIR_X_PIN, LOW);
+  digitalWrite(DIR_Y_PIN, LOW);
+  digitalWrite(DIR_Z_PIN, HIGH);
   
+  while(moveX || moveY || moveZ){
+     if(isStopped()){
+        stopped = true;
+        break;
+      }
+      delayMicroseconds(DELAY);
+      if(isColliding(zDir,Z)){
+        moveZ = false;
+      }
+      if(isColliding(yDir,Y)){
+        moveY = false;
+      }
+      if(isColliding(xDir,X)){
+        moveX = false;
+      }
+      if(moveX){
+        digitalWrite(CP_X_PIN, HIGH);
+        digitalWrite(CP_X_PIN, LOW);
+      }
+      if(moveY){
+        digitalWrite(CP_Y_PIN, HIGH);
+        digitalWrite(CP_Y_PIN, LOW);
+      }
+      if(moveZ){
+        digitalWrite(CP_Z_PIN, HIGH);
+        digitalWrite(CP_Z_PIN, LOW);
+      }
+  }
 }
 
 void movePos(float x, float y, float z){
-  int xTicks = abs(x*PULSES_PER_CIRCLE/DISTANCE_PER_TURN);
+  int xTicks = abs(x*PULSES_PER_CIRCLE/DISTANCE_PER_TURN); //ticks are the number of pulses sent out to the motor drivers
   int yTicks = abs(y*PULSES_PER_CIRCLE/DISTANCE_PER_TURN);
   int zTicks = abs(z*PULSES_PER_CIRCLE/DISTANCE_PER_TURN)*2;
-  int maxTicks = (xTicks>yTicks? (xTicks>zTicks? xTicks: zTicks): (yTicks>zTicks? yTicks:zTicks));
-  bool xDir = (x<0)?COUNTERCLOCKWISE:CLOCKWISE;
-  bool yDir = (y<0)?COUNTERCLOCKWISE:CLOCKWISE;
-  bool zDir = (z<0)?CLOCKWISE:COUNTERCLOCKWISE;
-  
+  int maxTicks = (xTicks>yTicks? (xTicks>zTicks? xTicks: zTicks): (yTicks>zTicks? yTicks:zTicks)); //nested ternary statements are not bad form, ok?
+  bool xDir = (x<0)?COUNTERCLOCKWISE:CLOCKWISE; //counterclockwise is left
+  //negative is left
+  bool yDir = (y<0)?COUNTERCLOCKWISE:CLOCKWISE; //counterclockwise is backwards
+  //negative is backwards
+  bool zDir = (z<0)?CLOCKWISE:COUNTERCLOCKWISE; //for some reason, the z-axis goes backwards; counterclockwise is up
+  //negative is down
+
+  //setting motor direction
   if(xDir == CLOCKWISE)
       digitalWrite(DIR_X_PIN, HIGH);
   else
@@ -335,6 +390,11 @@ void movePos(float x, float y, float z){
       digitalWrite(DIR_Z_PIN, HIGH);
   else
       digitalWrite(DIR_Z_PIN, LOW);
+
+  //You don't need to understand this, but basically,
+  //what's happening is the arduino is sending out a pulse signal
+  //at a set frequency. Modifying DELAY makes the motor go faster
+  //or slower depending on the pulse frequency.
   for(int i=0;i<maxTicks;i++){
      if(isStopped()){
         stopped = true;
