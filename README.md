@@ -7,5 +7,5 @@ Current features include:
  * Variable passing (floats only)
  * Absolute positioning
  * Relative movement
- * Pausing
+ * Pausing  
 A separate readme file will be created for assemblarm.
