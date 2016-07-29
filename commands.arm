@@ -1,0 +1,14 @@
+CALIBRATE
+EXEC vacoff
+UP 0.5
+GOTO 50 27 0.5
+%sample comment here
+DOWN 0.5
+RIGHT 2
+FORWARD 2
+LEFT 2
+BACK 2
+UP 0.5
+EXEC vacon
+INCLUDE upfive.arm
+EXEC vacoff

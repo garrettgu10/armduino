@@ -85,7 +85,6 @@ public class Arduino {
 					if (serialPort.readString(event.getEventValue()).equals("\n")) {
 						initializing = false;
 						runQueue();
-						System.out.println("done");
 					}
 				} catch (SerialPortException e) {
 					e.printStackTrace();

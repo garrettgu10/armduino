@@ -97,10 +97,11 @@ void setup()
   pinMode(Z_BOTTOM_SENSOR, INPUT);
 
   pinMode(13,OUTPUT);
-  calibrate();
   
   //Internal pullup resistor will invert signal
   pinMode(STOP_PIN, INPUT_PULLUP);
+
+  calibrate();
 }
 
 void loop()
@@ -247,6 +248,7 @@ void vacuumOn()
 void vacuumOff()
 {
   digitalWrite(VACUUM_PIN, HIGH);
+  digitalWrite(13,LOW);
 }
 
 /*char *pickup(float x, float y){
@@ -327,7 +329,9 @@ void calibrate(){
   //this function is basically a clone of the movePos function,
   //but with each axis moving all the way in the negative direction.
   //look there if more documentation is needed.
+  movePos(0,0,10);
   //trust me: replacing the following with movePos(INT_MIN,INT_MIN,INT_MIN) does not work.
+  
   bool moveX = true;
   bool moveY = true;
   bool moveZ = true;
@@ -338,21 +342,17 @@ void calibrate(){
   digitalWrite(DIR_Y_PIN, LOW);
   digitalWrite(DIR_Z_PIN, HIGH);
   
-  while((moveX || moveY) || moveZ){
+  while(moveX || moveY){
      if(isStopped()){
         stopped = true;
         break;
       }
       delayMicroseconds(DELAY);
-      if(isColliding(zDir,Z)){
-        moveZ = false;
-      }
       if(isColliding(yDir,Y)){
         moveY = false;
       }
       if(isColliding(xDir,X)){
         moveX = false;
-        digitalWrite(13,HIGH);
       }
       if(moveX){
         digitalWrite(CP_X_PIN, HIGH);
@@ -362,16 +362,25 @@ void calibrate(){
         digitalWrite(CP_Y_PIN, HIGH);
         digitalWrite(CP_Y_PIN, LOW);
       }
-      if(moveZ){
-        digitalWrite(CP_Z_PIN, HIGH);
-        digitalWrite(CP_Z_PIN, LOW);
+  }
+
+  while(moveZ){
+      if(isStopped()){
+          stopped = true;
+          break;
       }
+      delayMicroseconds(DELAY);
+      if(isColliding(zDir,Z)){
+        moveZ = false;
+      }
+      digitalWrite(CP_Z_PIN, HIGH);
+      digitalWrite(CP_Z_PIN, LOW);
   }
   currentPos.x=0;
   currentPos.y=0;
   currentPos.z=0;
   calibrated = true;
-  digitalWrite(13,HIGH);
+  digitalWrite(13, HIGH);
 }
 
 void absMove(float x, float y, float z){
