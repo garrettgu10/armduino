@@ -7,6 +7,7 @@ Basic commands include:
  * MOVE ___ ___ ___ -- Similar to GOTO; however, this command moves the stage relative to the stage's current position. For example, the command "MOVE 1 2 3" would move the stage 1 unit to the right, 2 units forward, and 3 units up.  
  * CALIBRATE -- Calibrates the stage.  
  * WAIT ___ -- When followed by an integer n, this command pauses program execution for n milliseconds.  
+  
  Also, other files within the directory can be called.
- * INCLUDE ___ -- When followed by a file name and possible float parameters, this command runs all code within the target file. Passed parameters can be accessed within the target program using keywords such as VAR1, VAR2, ... These variables can be used to replace floats in all parts of the target program.  
- * REQUIRE ___ -- When followed by an integer n, this command checks to see if the program has received fewer than n parameters. If so, an error message is printed and the program halts. It is recommended that every program that receives parameters include this command near the beginning.  
+ * INCLUDE ___ -- When followed by a file name and possible float parameters, this command runs all code within the target file. Passed parameters can be accessed within the target program using keywords such as VAR1, VAR2, ... These variables can be used to replace floats in all parts of the target program. For example, "INCLUDE pickup.arm 10 5" executes the "pickup.arm" program and passes the numbers 10 and 5.  
+ * REQUIRE ___ -- When followed by an integer n, where n is the required number of parameters in order for the program to run without problems, this command checks to see if the program has received enough parameters. If so, an error message is printed and the program halts. It is recommended that every program that receives parameters include this command near the beginning. If REQUIRE is not called and an unpassed variable is called, that variable will be replaced with 0.  
