@@ -1,2 +1,5 @@
-INCLUDE console/commands1.arm
 UP 5
+GOTO 89 19 5
+DOWN 5
+UP 3
+LEFT 50
