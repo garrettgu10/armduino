@@ -4,7 +4,7 @@ Basic commands include:
  * UP/DOWN/LEFT/RIGHT/FORWARD/BACK ___ -- When followed by a float n, these move the stage n units(cm by default) in the direction specified.  
  * VACON/VACOFF -- These turn the vacuum on and off, respectively.  
  * GOTO ___ ___ ___ -- When followed by three floats x, y, and z, this command moves the stage to the absolute coordinate (x,y,z).
- * MOVE ___ ___ ___ -- Similar to GOTO; however, this command moves the stage relative to the stage's current position. For example, the command "MOVE 1 2 3" would move the stage 1 unit to the right, 2 units back, and 3 units up.  
+ * MOVE ___ ___ ___ -- Similar to GOTO; however, this command moves the stage relative to the stage's current position. For example, the command "MOVE 1 2 3" would move the stage 1 unit to the right, 2 units forward, and 3 units up.  
  * CALIBRATE -- Calibrates the stage.  
  * WAIT ___ -- When followed by an integer n, this command pauses program execution for n milliseconds.
  Also, other files within the directory can also be called.
