@@ -201,6 +201,15 @@ public class armduino {
 		}
 	}
 	
+	public void openConsole(){
+		System.out.println("Enter commands. EXIT to finish and save.");
+		try {
+			execFile(System.in,0, new ArrayList<String>());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void start(){
 		a = new Arduino("/dev/cu.usbmodem1421"); //Change this string when changing Arduinos
 		
@@ -217,17 +226,11 @@ public class armduino {
 		
 		try {
 			Thread.sleep(200);
-			a.calibrate();
-		} catch (InterruptedException | SerialPortException e1) {
+		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
 		
-		System.out.println("Enter commands. EXIT to finish and save.");
-		try {
-			execFile(System.in,0, new ArrayList<String>());
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+		openConsole();
 	}
 	
 	public static void main(String[] args) {

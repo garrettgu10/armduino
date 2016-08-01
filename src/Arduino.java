@@ -8,7 +8,7 @@ import jssc.SerialPortException;
 
 public class Arduino {
 	private SerialPort serialPort; // the serial port communicator to the arduino
-	boolean busy; // whether the arm is running or not
+	boolean busy = false; // whether the arm is running or not
 	private Queue<String> queue; // the queue for multiple commands, will finish execution before starting next function
 	boolean initializing = true;
 
