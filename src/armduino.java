@@ -1,11 +1,10 @@
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,24 +13,6 @@ import java.util.Scanner;
 import javax.swing.*;
 
 import jssc.SerialPortException;
-
-class GPanel extends JPanel{
-	private static final long serialVersionUID = 5992612117451928397L;
-	Color bgcolor = new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));
-	
-	public void paint(Graphics g){
-		//JPanel paint function
-		Graphics2D g2 = (Graphics2D)g;
-		g2.setColor(bgcolor);
-		g2.fillRect(0, 0, this.getWidth(), this.getHeight());
-		g2.setColor(Color.WHITE);
-		g2.drawString("U R NOW CONTROLLING 3D STAGE",10,100);
-	}
-	
-	public void changeColor(){ //changes background color
-		bgcolor = new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));
-	}
-}
 
 public class armduino {
 	
@@ -52,7 +33,11 @@ public class armduino {
 		case KeyEvent.VK_BACK_SPACE: a.move(0, 0, -0.5f);break;
 		case KeyEvent.VK_G: a.move(5, 5, 5); break;
 		case KeyEvent.VK_C: a.calibrate(); break;
-		case KeyEvent.VK_V: a.addQueue(vacuumOn? "vacoff" : "vacon"); 
+		case KeyEvent.VK_V: if(vacuumOn){
+			a.vacoff();
+		}else{
+			a.vacon();
+		}
 		vacuumOn = !vacuumOn;
 		break;
 		default: changeColor = false;
@@ -80,6 +65,77 @@ public class armduino {
 		return Float.parseFloat(s);
 	}
 	
+	enum commandResult{PASS,ERROR,EXIT,CRITICAL,COMMENT};
+	
+	private commandResult execCommand(String[] props, String tabs, List<String> vars) throws SerialPortException, FileNotFoundException, InterruptedException{
+		if(props[0].equals("REQUIRE")){
+			int required = (int)parseFloat(props[1],vars); //required number of variables in assertion
+			if(required > vars.size()){
+				System.out.println(tabs+"Error: Inclusion requires "+(int)parseFloat(props[1],vars)+" variables.");
+				return commandResult.CRITICAL;
+			}
+		}else if(props[0].equals("GOTO")){
+			a.absmove(parseFloat(props[1],vars), parseFloat(props[2],vars), parseFloat(props[3],vars));
+		}
+		else if(props[0].equals("MOVE")){
+			a.move(parseFloat(props[1],vars), parseFloat(props[2],vars), parseFloat(props[3],vars));
+		}
+		else if(props[0].equals("CALIBRATE")){
+			a.calibrate();
+		}
+		else if(props[0].equals("WAIT")){
+			Thread.sleep((long)parseFloat(props[1],vars));
+		}else if(props[0].equals("RIGHT")){
+			a.move(parseFloat(props[1],vars), 0, 0);
+		}
+		else if(props[0].equals("LEFT")){
+			a.move(-parseFloat(props[1],vars), 0, 0);
+		}
+		else if(props[0].equals("UP")){
+			a.move(0, 0, parseFloat(props[1],vars));
+		}
+		else if(props[0].equals("DOWN")){
+			a.move(0, 0, -parseFloat(props[1],vars));
+		}
+		else if(props[0].equals("FORWARD")){
+			a.move(0, parseFloat(props[1],vars), 0);
+		}
+		else if(props[0].equals("BACK")){
+			a.move(0, -parseFloat(props[1],vars), 0);
+		}
+		else if(props[0].equals("VACON")){
+			a.vacon();
+		}
+		else if(props[0].equals("VACOFF")){
+			a.vacoff();
+		}
+		else if(props[0].equals("INCLUDE")){
+			//passedVariables is a list of the variables that can appear after the file name
+			ArrayList<String> passedVariables = new ArrayList<String> (Arrays.asList(props));
+			passedVariables.remove(0);
+			passedVariables.remove(0);
+			execFile(new FileInputStream(props[1]),tabs.length()+1,passedVariables);
+		}
+		else if(props[0].equals("EXIT")){
+			return commandResult.EXIT;
+		}
+		else if(props[0].charAt(0) == '%'){ //if the first character is %, the line is a comment
+			return commandResult.COMMENT;
+		}else{
+			return commandResult.ERROR;
+		}
+		return commandResult.PASS;
+	}
+	
+	PrintWriter pw = null; //this is what we use to write console commands to file
+	Thread shutDown = new Thread(){ //the code in this thread is executed on exit
+		public void run(){
+			if(pw!=null){
+				pw.close();
+			}
+		}
+	};
+	
 	public void execFile(InputStream in, int nestedLevel, List<String> vars) throws FileNotFoundException{ 
 		//nestedLevel indicates how many tabs to place in front of each printed line
 		Scanner s = new Scanner(in);
@@ -88,10 +144,22 @@ public class armduino {
 		
 		String tabs = new String(new char[nestedLevel]).replace("\0", "\t");
 		System.out.print(tabs+linenum+": ");
+		
+		boolean writeToFile = false;
+		
+		if(in.equals(System.in)){ //from command input
+			writeToFile = true;
+			int i; //Each new file must be written to a new location, i is the smallest number where a file commands(i).arm doesn't exist.
+			for(i = 0; new File("console/commands"+i+".arm").exists(); i++){}
+			pw = new PrintWriter("console/commands"+i+".arm");
+		}
 		while(s.hasNextLine()){
 			linenum++;
 			String ln = s.nextLine();
 			String[] props = ln.split(" ");
+			if(pw!=null && writeToFile){
+				pw.write(ln+"\n");
+			}
 			
 			if(!isConsoleInput){
 				System.out.print(ln);
@@ -102,57 +170,14 @@ public class armduino {
 				if(ln.isEmpty()){
 					return;
 				}
-				else if(props[0].equals("REQUIRE")){
-					int required = (int)parseFloat(props[1],vars); //required number of variables in assertion
-					if(required > vars.size()){
-						System.out.println(tabs+"Error: Inclusion requires "+(int)parseFloat(props[1],vars)+" variables.");
-						return;
+				else{
+					commandResult result = execCommand(props, tabs, vars);
+					if(result==commandResult.ERROR){
+						System.out.println(tabs+"Command invalid on line "+linenum+":");
+						System.out.println(tabs+"\t"+ln);
+					}else if(result==commandResult.CRITICAL || result == commandResult.EXIT){
+						break;
 					}
-				}else if(props[0].equals("GOTO")){
-					a.absmove(parseFloat(props[1],vars), parseFloat(props[2],vars), parseFloat(props[3],vars));
-				}
-				else if(props[0].equals("MOVE")){
-					a.move(parseFloat(props[1],vars), parseFloat(props[2],vars), parseFloat(props[3],vars));
-				}
-				else if(props[0].equals("CALIBRATE")){
-					a.calibrate();
-				}
-				else if(props[0].equals("WAIT")){
-					Thread.sleep((long)parseFloat(props[1],vars));
-				}else if(props[0].equals("RIGHT")){
-					a.move(parseFloat(props[1],vars), 0, 0);
-				}
-				else if(props[0].equals("LEFT")){
-					a.move(-parseFloat(props[1],vars), 0, 0);
-				}
-				else if(props[0].equals("UP")){
-					a.move(0, 0, parseFloat(props[1],vars));
-				}
-				else if(props[0].equals("DOWN")){
-					a.move(0, 0, -parseFloat(props[1],vars));
-				}
-				else if(props[0].equals("FORWARD")){
-					a.move(0, parseFloat(props[1],vars), 0);
-				}
-				else if(props[0].equals("BACK")){
-					a.move(0, -parseFloat(props[1],vars), 0);
-				}
-				else if(props[0].equals("EXEC")){
-					a.addQueue(props[1]);
-				}
-				else if(props[0].equals("INCLUDE")){
-					//passedVariables is a list of the variables that can appear after the file name
-					ArrayList<String> passedVariables = new ArrayList<String> (Arrays.asList(props));
-					passedVariables.remove(0);
-					passedVariables.remove(0);
-					execFile(new FileInputStream(props[1]),nestedLevel+1,passedVariables);
-				}
-				else if(props[0].equals("EXIT")){
-					return;
-				}
-				else if(props[0].charAt(0) != '%'){ //if the first character is %, the line is a comment
-					System.out.println(tabs+"Command invalid on line "+linenum+":");
-					System.out.println(tabs+"\t"+ln);
 				}
 			}catch(Exception e){
 				System.out.println(tabs+"ERROR: LINE "+linenum);
@@ -161,7 +186,7 @@ public class armduino {
 			}
 			while(a.busy){
 				try {
-					Thread.sleep(100);
+					Thread.sleep(10);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -171,10 +196,15 @@ public class armduino {
 			}
 		}
 		s.close();
+		if(pw!=null && writeToFile){
+			pw.close();
+		}
 	}
 	
 	public void start(){
 		a = new Arduino("/dev/cu.usbmodem1421"); //Change this string when changing Arduinos
+		
+		Runtime.getRuntime().addShutdownHook(shutDown);
 		
 		keyPanel = new GPanel();
 		
@@ -192,7 +222,7 @@ public class armduino {
 			e1.printStackTrace();
 		}
 		
-		System.out.println("Enter commands. EXIT to finish.");
+		System.out.println("Enter commands. EXIT to finish and save.");
 		try {
 			execFile(System.in,0, new ArrayList<String>());
 		} catch (FileNotFoundException e) {

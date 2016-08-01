@@ -29,7 +29,7 @@ public class Arduino {
 	}
 
 	// writes a string to the arduino, private
-	void write(String string) throws SerialPortException {
+	private void write(String string) throws SerialPortException {
 		busy = true;
 		serialPort.writeString(string);
 	}
@@ -60,9 +60,17 @@ public class Arduino {
 	public void calibrate() throws SerialPortException {
 		addQueue("cal");
 	}
+	
+	public void vacon() throws SerialPortException {
+		addQueue("vacon");
+	}
+	
+	public void vacoff() throws SerialPortException {
+		addQueue("vacoff");
+	}
 
 	// adds a command to the queue, private
-	void addQueue(String string) throws SerialPortException {
+	private void addQueue(String string) throws SerialPortException {
 		if (busy && !initializing)
 			queue.add(string);
 		else
