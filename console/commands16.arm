@@ -1,0 +1,7 @@
+INCLUDE console/commands14.arm
+CALIBRATE
+GOTO 42.25 11 3
+DOWN 3
+DOWN 3
+INCLUDE console/commands14.arm
+INCLUDE console/commands14.arm

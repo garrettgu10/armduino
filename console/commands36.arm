@@ -1,0 +1,42 @@
+INCLUDE console/commands32.arm
+INCLUDE console/commands32.arm
+INCLUDE console/commands14.arm
+INCLUDE console/commands32.arm
+VACON
+DOWN 1
+UP 3
+RIGHT 4
+RIGHT 4
+FORWARD 8
+RIGHT 8
+LEFT 3
+FORWARD 3
+RIGHT 1
+DOWN 0.3
+LEFT 0.2
+DOWN 0.3
+LEFT 0.2
+DOWN 0.3
+LEFT 0.1
+BACK 0.1
+DOWN 0.1
+DOWN 0.1
+LEFT 0.1
+DOWN 0.1
+DOWN 0.1
+VACOFF
+UP 5
+DOWN 5
+VACON
+DOWN 0.1
+UP 5
+GOTO 42.25 10.5 11
+DOWN 8
+DOWN 3
+VACOFF
+CALIBRATE
+INCLUDE console/commands14.arm
+INCLUDE console/commands14.arm
+INCLUDE console/commands14.arm
+INCLUDE console/commands14.arm
+INCLUDE console/commands14.arm
