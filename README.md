@@ -25,6 +25,7 @@ The Java code includes an interface to connect with the Arduino and to interpret
  * G -- moves the arm +5 units in each direction.  
  * C -- calibrates the arm.  
  * V -- toggles vacuum. Assumes that vacuum is off when program starts. If the vacuum is not off, simply press V twice.  
+
 The console also accepts assemblarm commands. Use the INCLUDE keyword to read a program.  
 
 A separate readme file for assemblarm is accessible at assemblarm.md.
