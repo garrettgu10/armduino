@@ -13,11 +13,11 @@
 #define EN_Z_PIN 9
 
 //below are the metal sensors that are plugged into the analog ports
-#define X_LEFT_SENSOR A4
-#define X_RIGHT_SENSOR A0
-#define Y_FRONT_SENSOR A3
-#define Y_BACK_SENSOR A1
-#define Z_BOTTOM_SENSOR A2
+#define X_LEFT_SENSOR A3
+#define X_RIGHT_SENSOR A2
+#define Y_FRONT_SENSOR A1
+#define Y_BACK_SENSOR A4
+#define Z_BOTTOM_SENSOR A0
 
 #define SENSOR_TRIPPED LOW
 
@@ -101,12 +101,13 @@ void setup()
   //Internal pullup resistor will invert signal
   pinMode(STOP_PIN, INPUT_PULLUP);
 
-  calibrate();
+  //calibrate();
 }
 
 void loop()
 {
   if(!stopped){
+    digitalWrite(13,digitalRead(Y_FRONT_SENSOR)==LOW?HIGH:LOW);
     if (Serial.available()) {
       //Allow for transmission to finish
       delay(100);

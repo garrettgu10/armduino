@@ -1,0 +1,2 @@
+INCLUDE console/commands14.arm
+INCLUDE console/commands32.arm
