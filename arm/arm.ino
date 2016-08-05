@@ -101,7 +101,7 @@ void setup()
   //Internal pullup resistor will invert signal
   pinMode(STOP_PIN, INPUT_PULLUP);
 
-  //calibrate();
+  calibrate();
 }
 
 void loop()
@@ -282,7 +282,8 @@ boolean isStopped(){
   //Code could go here to indicate program failure
   //Serial.println("error"); or something like this
   //Inverted signal
-  return (digitalRead(STOP_PIN)==HIGH)?false:true;
+  //return (digitalRead(STOP_PIN)==HIGH)?false:true;
+  return false;
 }
 
 void movePos(float x, float y){
@@ -436,7 +437,7 @@ void movePos(float x, float y, float z){
       digitalWrite(DIR_Z_PIN, LOW);
   }
 
-  //You don't need to understand this, but basically,
+  //basically,
   //what's happening is the arduino is sending out a pulse signal
   //at a set frequency. Modifying DELAY makes the motor go faster
   //or slower depending on the pulse frequency.

@@ -27,5 +27,7 @@ The Java code includes an interface to connect with the Arduino and to interpret
  * V -- toggles vacuum. Assumes that vacuum is off when program starts. If the vacuum is not off, simply press V twice.  
 
 The console also accepts assemblarm commands. Use the INCLUDE keyword to read a program.  
+# Original 2015 Quarknet files
+I also put a copy of the original Quarknet files in this repo, including the 2015 team's documentation and code.  
 
 A separate readme file for assemblarm is accessible at assemblarm.md.
