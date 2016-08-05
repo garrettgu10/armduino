@@ -1,0 +1,18 @@
+The arm and or folders contain git repositories with code for the arduinos. The one labled as arm takes serial input via USB and converts it to digital signals that go to the motors. The one labled as or acts as a logical or gate for all the sensor inputs and outputs to the arduino with the arm program. This is necessary because the arduino does not have enough gpio bins to interface with all the sensors on separate channels. When one of the sensors is activated the arm program immediately halts and stops responding to input. At present it sends nothing over USB when this occurs. Press the reset button, located on the physical arduino with the arm program to reset in the event that this happens.
+ 
+The step motors on the arm are very precise, so except in the case of human intervention the sensors should not be activated. The sensors also make it difficult to precisely zero the arms. Perhaps consider not using them.
+
+Serial input for the arm program can take five forms. Only the last two forms should be necessary.
+
+x,y,z		Replace the letters with absolute coordinates in centimeters. x, y, and z are of the type float
+vacon		turns the vacuum pump on
+vacoff		turns the vacuum pump off
+x,y,pickup	raises the arm(distance is configurable in a define statement), moves it to the x,y postition, lowers it, and enables the vacuum pump
+x,y,dropoff	lowers the arm, moves it to the x,y postition, lowers it, and disables the vacuum pump
+
+All serial commands should be terminated with a newline '\n' character. Upon the completion of the command, the arduino will send a newline character over serial to your computer, at which point you can send another command. The vacuum pump does not immediately detach from the chips when it is turned off, so an appropriate workaround should be used. (Insert delay or reverse pump direction perhaps). The pump is also running at 125V 60Hz currently (it still works), but should be running with a 240-250V 50Hz signal(approximately 4x power?).
+
+Pin configurations are explained at the top of the programs.
+
+In the folder titled java stuff there is some example code for communication via serial (for communication with arduino), and over tcp/ip (communication w/ labview could be handled locally over some port). At present this code doesn't really do much, but is functional if you are looking for examples.
+
