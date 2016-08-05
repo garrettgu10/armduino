@@ -410,7 +410,7 @@ void movePos(float x, float y, float z){
   
   int xTicks = abs(x*PULSES_PER_CIRCLE/DISTANCE_PER_TURN); //ticks are the number of pulses sent out to the motor drivers
   int yTicks = abs(y*PULSES_PER_CIRCLE/DISTANCE_PER_TURN);
-  int zTicks = abs(z*PULSES_PER_CIRCLE/DISTANCE_PER_TURN)*2;
+  int zTicks = abs(z*PULSES_PER_CIRCLE/DISTANCE_PER_TURN)*2; //z-axis is set to move half as fast.
   int maxTicks = (xTicks>yTicks? (xTicks>zTicks? xTicks: zTicks): (yTicks>zTicks? yTicks:zTicks)); //nested ternary statements are not bad form, ok?
   
   bool xDir = (x<0)?COUNTERCLOCKWISE:CLOCKWISE; //counterclockwise is left
