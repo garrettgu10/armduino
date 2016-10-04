@@ -1,6 +1,9 @@
 # armduino
 Armduino is a Java + Arduino program created for Quarknet that is used to control the 3D stage at SMU.
 
+# Presentation of project
+A presentation describing the project and its uses is available [here](https://docs.google.com/presentation/d/1DsS5xq3teFcG5Dp5DJaCbcJYvmE3pz3ZUYOSFfNkfGc/edit?usp=sharing).
+
 # assemblarm
 Assemblarm is a custom-made scripting language to program the 3D stage to do sequencial steps. The main benefit of using this simple language is that you can write code while executing the code, so you can see the results in real time. By convention, an assemblarm filename ends in the extension .arm.  
 Current features include:  
