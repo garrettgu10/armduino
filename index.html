@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Armduino by garrettgu10</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Armduino</h1>
+        <h2></h2>
+        <a href="https://github.com/garrettgu10/armduino" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a id="armduino" class="anchor" href="#armduino" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>armduino</h1>
+
+<p>Armduino is a Java + Arduino program created for Quarknet that is used to control the 3D stage at SMU.</p>
+
+<h1>
+<a id="presentation-of-project" class="anchor" href="#presentation-of-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Presentation of project</h1>
+
+<p>A presentation describing the project and its uses is available <a href="https://docs.google.com/presentation/d/1DsS5xq3teFcG5Dp5DJaCbcJYvmE3pz3ZUYOSFfNkfGc/edit?usp=sharing">here</a>.</p>
+
+<h1>
+<a id="assemblarm" class="anchor" href="#assemblarm" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>assemblarm</h1>
+
+<p>Assemblarm is a custom-made scripting language to program the 3D stage to do sequencial steps. The main benefit of using this simple language is that you can write code while executing the code, so you can see the results in real time. By convention, an assemblarm filename ends in the extension .arm.<br>
+Current features include:  </p>
+
+<ul>
+<li>File references<br>
+</li>
+<li>Variable passing (floats only)<br>
+</li>
+<li>Absolute positioning<br>
+</li>
+<li>Relative movement<br>
+</li>
+<li>Pausing<br>
+</li>
+</ul>
+
+<h1>
+<a id="serial-input" class="anchor" href="#serial-input" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Serial input</h1>
+
+<p>Look at Java code to see examples of serial input to the Arduino to control the motors. Strings are sent to the Arduino to give commands. Then, the Arduino sends a new line "\n" in order to indicate the completion of the command. Currently functional commands include:  </p>
+
+<ul>
+<li>Send three floats x, y, and z separated by commas to move the arm relative to its current position. (e.g. "10,3,6")<br>
+</li>
+<li>Send three floats x, y, and z separated by commas, followed by another commas and "abs" in order to move the arm to the absolute coordinate (x,y,z). (e.g. "10,3,6,abs")<br>
+</li>
+<li>Send the string "vacon" to turn on the vacuum.<br>
+</li>
+<li>Send the string "vacoff" to turn off the vacuum.<br>
+</li>
+<li>Send the string "cal" to calibrate the arm. The Arduino calibrates by moving each axis in the negative direction until the sensors are tripped. The ending point is subsequently called the origin, (0,0,0).<br>
+</li>
+</ul>
+
+<h1>
+<a id="java-interface" class="anchor" href="#java-interface" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Java interface</h1>
+
+<p>The Java code includes an interface to connect with the Arduino and to interpret assemblarm. When the main function in "armduino.java" is called, a colored window is opened up, and keypresses can be detected through this window.  </p>
+
+<ul>
+<li>Up/down/left/right -- moves the arm in the x and y direction depending on the key pressed.<br>
+</li>
+<li>Enter/backspace -- enter moves the arm up, and backspace moves the arm down. (z-axis movement)<br>
+</li>
+<li>G -- moves the arm +5 units in each direction.<br>
+</li>
+<li>C -- calibrates the arm.<br>
+</li>
+<li>V -- toggles vacuum. Assumes that vacuum is off when program starts. If the vacuum is not off, simply press V twice.<br>
+</li>
+</ul>
+
+<p>The console also accepts assemblarm commands. Use the INCLUDE keyword to read a program.  </p>
+
+<h1>
+<a id="original-2015-quarknet-files" class="anchor" href="#original-2015-quarknet-files" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Original 2015 Quarknet files</h1>
+
+<p>I also put a copy of the original Quarknet files in this repo, including the 2015 team's documentation and code.  </p>
+
+<p>A separate readme file for assemblarm is accessible at assemblarm.md.</p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/garrettgu10/armduino/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/garrettgu10/armduino/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/garrettgu10/armduino"></a> is maintained by <a href="https://github.com/garrettgu10">garrettgu10</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
