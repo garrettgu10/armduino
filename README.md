@@ -12,6 +12,8 @@ Current features include:
  * Absolute positioning  
  * Relative movement  
  * Pausing  
+ 
+Note: assemblarm is meant to be a simple way to test the robot. You probably want to write a Java program if you want to do anything more advanced.
 
 # Serial input
 Look at Java code to see examples of serial input to the Arduino to control the motors. Strings are sent to the Arduino to give commands. Then, the Arduino sends a new line "\n" in order to indicate the completion of the command. Currently functional commands include:  
